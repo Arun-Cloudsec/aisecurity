@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Security Sentinel</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--red:#ef4444;--orange:#f97316;--green:#22c55e;--dark:#08091a;--card:#0f1225}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);min-height:100vh;display:flex;overflow:hidden}
+.left{width:54%;background:linear-gradient(145deg,#050710 0%,#0a0e24 40%,#0f1535 70%,#0a1228 100%);display:flex;flex-direction:column;justify-content:center;padding:72px 64px;position:relative;overflow:hidden}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(239,68,68,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(239,68,68,.05) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.glow{position:absolute;border-radius:50%;pointer-events:none}
+.g1{top:-80px;right:-60px;width:400px;height:400px;background:radial-gradient(circle,rgba(239,68,68,.08) 0%,transparent 70%)}
+.g2{bottom:-100px;left:-60px;width:320px;height:320px;background:radial-gradient(circle,rgba(249,115,22,.06) 0%,transparent 70%)}
+.brand{position:relative;z-index:1;margin-bottom:40px;display:flex;align-items:center;gap:16px}
+.brand-icon{width:52px;height:52px;background:linear-gradient(135deg,#ef4444,#f97316);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 24px rgba(239,68,68,.4)}
+.brand-name{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.brand-sub{font-size:11px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.1em;margin-top:3px}
+.hero{font-family:'Syne',sans-serif;font-size:44px;font-weight:900;line-height:1.08;color:#fff;letter-spacing:-2px;margin-bottom:16px;position:relative;z-index:1}
+.hero span{background:linear-gradient(90deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:14px;color:rgba(255,255,255,.4);line-height:1.8;max-width:380px;margin-bottom:32px;position:relative;z-index:1}
+.modules{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative;z-index:1}
+.mod{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);border-radius:8px}
+.mod-icon{font-size:13px;flex-shrink:0}
+.mod-text{font-size:11.5px;color:rgba(255,255,255,.55);font-weight:500}
+.right{flex:1;background:#0b0c1e;display:flex;align-items:center;justify-content:center;padding:40px;border-left:1px solid rgba(239,68,68,.1)}
+.card{width:100%;max-width:380px}
+.tabs{display:flex;background:rgba(255,255,255,.05);border-radius:10px;padding:3px;margin-bottom:24px;gap:2px;border:1px solid rgba(255,255,255,.08)}
+.tab{flex:1;padding:8px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;background:none;color:rgba(255,255,255,.35)}
+.tab.active{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.eyebrow{font-size:11px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+.form-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-.8px}
+.form-sub{font-size:13px;color:rgba(255,255,255,.35);margin-bottom:22px;line-height:1.6}
+.field{margin-bottom:13px}
+label{display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,.3);margin-bottom:5px;letter-spacing:.07em;text-transform:uppercase}
+input{width:100%;padding:11px 14px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13.5px;color:#fff;outline:none;transition:all .2s}
+input:focus{border-color:#ef4444;background:rgba(239,68,68,.06);box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+input::placeholder{color:rgba(255,255,255,.2)}
+.pw-wrap{position:relative}.pw-wrap input{padding-right:42px}
+.eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.25);font-size:14px;padding:4px}
+.eye:hover{color:#ef4444}
+.err{background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.3);color:#fca5a5;font-size:12.5px;padding:10px 14px;border-radius:8px;margin-bottom:12px;display:none}
+.ok{background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.3);color:#86efac;font-size:12.5px;padding:10px 14px;border-radius:8px;margin-bottom:12px;display:none}
+.btn{width:100%;padding:13px;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 20px rgba(239,68,68,.35);transition:all .2s}
+.btn:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:sp .6s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.first-note{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);border-radius:8px;padding:10px 13px;font-size:12px;color:#fdba74;margin-bottom:13px;line-height:1.6;display:none}
+@media(max-width:768px){.left{display:none}.right{background:var(--dark);padding:24px}}
+</style>
+</head>
+<body>
+<div class="left">
+  <div class="grid"></div><div class="glow g1"></div><div class="glow g2"></div>
+  <div class="brand">
+    <div class="brand-icon">🛡</div>
+    <div><div class="brand-name">AI Security Sentinel</div><div class="brand-sub">Claude-powered AI security scanner</div></div>
+  </div>
+  <div style="position:relative;z-index:1">
+    <div class="hero">Secure your<br><span>Agentic AI</span><br>stack</div>
+    <p class="hero-sub">Scan for prompt injection, MCP vulnerabilities, RAG poisoning, jailbreaks, data leakage and compliance gaps — all powered by Claude AI.</p>
+    <div class="modules">
+      <div class="mod"><span class="mod-icon">💉</span><span class="mod-text">Prompt injection scanner</span></div>
+      <div class="mod"><span class="mod-icon">🔌</span><span class="mod-text">MCP server auditor</span></div>
+      <div class="mod"><span class="mod-icon">📚</span><span class="mod-text">RAG pipeline assessor</span></div>
+      <div class="mod"><span class="mod-icon">🤖</span><span class="mod-text">Agent behaviour monitor</span></div>
+      <div class="mod"><span class="mod-icon">🎯</span><span class="mod-text">Jailbreak red teamer</span></div>
+      <div class="mod"><span class="mod-icon">🔓</span><span class="mod-text">Prompt leakage tester</span></div>
+      <div class="mod"><span class="mod-icon">🔍</span><span class="mod-text">Data leakage detector</span></div>
+      <div class="mod"><span class="mod-icon">📋</span><span class="mod-text">Compliance reporter</span></div>
+    </div>
+  </div>
+</div>
+<div class="right">
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" id="tab-in" onclick="showTab('in')">Sign In</button>
+      <button class="tab" id="tab-reg" onclick="showTab('reg')">Create Account</button>
+    </div>
+    <div id="panel-in">
+      <div class="eyebrow">Secure access</div>
+      <div class="form-title">Welcome back</div>
+      <div class="form-sub">Sign in to your security workspace</div>
+      <div class="err" id="in-err"></div>
+      <div class="field"><label>Username</label><input type="text" id="in-user" placeholder="your.username" autocapitalize="none" spellcheck="false"></div>
+      <div class="field"><label>Password</label><div class="pw-wrap"><input type="password" id="in-pass" placeholder="Your password"><button class="eye" onclick="togglePw('in-pass')" type="button">👁</button></div></div>
+      <button class="btn" id="in-btn" onclick="doLogin()">Sign in</button>
+    </div>
+    <div id="panel-reg" style="display:none">
+      <div class="eyebrow">New account</div>
+      <div class="form-title">Create account</div>
+      <div class="form-sub">Join your team's security workspace</div>
+      <div class="first-note" id="first-note">🔑 <strong>First user</strong> — auto-assigned <strong>Admin</strong>. Set the Anthropic API key after signing in.</div>
+      <div class="err" id="reg-err"></div>
+      <div class="ok" id="reg-ok"></div>
+      <div class="field"><label>Full Name</label><input type="text" id="reg-name" placeholder="e.g. Fatima Al-Rashid" autocapitalize="words" spellcheck="false"></div>
+      <div class="field"><label>Username</label><input type="text" id="reg-user" placeholder="e.g. fatima.rashid" autocapitalize="none" spellcheck="false"></div>
+      <div class="field"><label>Password <span style="font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.2)">(min 8 chars)</span></label>
+        <div class="pw-wrap"><input type="password" id="reg-pass" placeholder="Create a strong password"><button class="eye" onclick="togglePw('reg-pass')" type="button">👁</button></div></div>
+      <div class="field"><label>Confirm Password</label>
+        <div class="pw-wrap"><input type="password" id="reg-pass2" placeholder="Repeat password"><button class="eye" onclick="togglePw('reg-pass2')" type="button">👁</button></div></div>
+      <button class="btn" id="reg-btn" onclick="doRegister()">Create account</button>
+    </div>
+  </div>
+</div>
+<script>
+checkFirst();
+async function checkFirst(){try{const r=await fetch('/api/auth/check-first');const d=await r.json();if(d.isFirst)document.getElementById('first-note').style.display='block';}catch(e){}}
+function showTab(t){['in','reg'].forEach(x=>{document.getElementById('panel-'+x).style.display=x===t?'block':'none';document.getElementById('tab-'+x).classList.toggle('active',x===t);});['in-err','reg-err','reg-ok'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});}
+function togglePw(id){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';}
+function setLoading(id,on,txt){const b=document.getElementById(id);b.disabled=on;b.innerHTML=on?'<div class="spin"></div>':txt;}
+async function doLogin(){
+  const u=document.getElementById('in-user').value.trim(),p=document.getElementById('in-pass').value;
+  const e=document.getElementById('in-err');e.style.display='none';
+  if(!u||!p){e.textContent='Please fill in all fields';e.style.display='block';return;}
+  setLoading('in-btn',true,'Sign in');
+  try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+  const d=await r.json();
+  if(d.success)window.location.href='/app';
+  else{setLoading('in-btn',false,'Sign in');e.textContent=d.error||'Sign in failed';e.style.display='block';}}
+  catch(ex){setLoading('in-btn',false,'Sign in');e.textContent='Network error';e.style.display='block';}
+}
+async function doRegister(){
+  const name=document.getElementById('reg-name').value.trim(),u=document.getElementById('reg-user').value.trim(),p=document.getElementById('reg-pass').value,p2=document.getElementById('reg-pass2').value;
+  const e=document.getElementById('reg-err'),ok=document.getElementById('reg-ok');e.style.display='none';ok.style.display='none';
+  if(!name||!u||!p){e.textContent='Please fill in all fields';e.style.display='block';return;}
+  if(p!==p2){e.textContent='Passwords do not match';e.style.display='block';return;}
+  setLoading('reg-btn',true,'Create account');
+  try{const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,username:u,password:p})});
+  const d=await r.json();
+  if(d.success){ok.textContent=d.isFirst?'✓ Admin account created! Redirecting…':'✓ Account created! Redirecting…';ok.style.display='block';setTimeout(()=>window.location.href='/app',800);}
+  else{setLoading('reg-btn',false,'Create account');e.textContent=d.error||'Registration failed';e.style.display='block';}}
+  catch(ex){setLoading('reg-btn',false,'Create account');e.textContent='Network error';e.style.display='block';}
+}
+document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;document.getElementById('panel-in').style.display!=='none'?doLogin():doRegister();});
+</script>
+</body>
+</html>

