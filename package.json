@@ -1,0 +1,17 @@
+{
+  "name": "ai-security-sentinel",
+  "version": "1.0.0",
+  "description": "AI Security Sentinel — Claude-powered security scanner for Agentic AI, RAG & MCP",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo 'No build step required'"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.18.2",
+    "uuid": "^9.0.0"
+  },
+  "engines": { "node": ">=18.0.0", "npm": ">=8.0.0" }
+}
